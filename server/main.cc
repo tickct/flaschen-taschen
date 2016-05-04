@@ -73,17 +73,23 @@ static void RunSpeedTest(FlaschenTaschen *display) {
     // Have one stable line in the middle to see if there
     // are glitches.
     const Color mark_color(255, 0, 0);
+    const Color dot_color(0, 0, 255);
     const int mark_column = display->width() / 2;
 
+    const int all_pixels = display->height() * display->width();
     for (unsigned int i = 0;/**/;++i) {
         struct timeval start, end;
         gettimeofday(&start, NULL);
 
+        const int dot_x = (i % all_pixels) % display->width();
+        const int dot_y = (i % all_pixels) / display->width();
         const Color &c = (i % 2 == 0) ? white : black;
         for (int y = 0; y < display->height(); ++y) {
             const bool marked_line = (int)((i/8) % display->height()) == y;
             for (int x = 0; x < display->width(); ++x) {
-                if (marked_line || x == mark_column)
+                if (x == dot_x && y == dot_y)
+                    display->SetPixel(x, y, dot_color);
+                else if (marked_line || x == mark_column)
                     display->SetPixel(x, y, mark_color);
                 else
                     display->SetPixel(x, y, c);
