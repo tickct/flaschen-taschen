@@ -81,8 +81,9 @@ static void RunSpeedTest(FlaschenTaschen *display) {
 
         const Color &c = (i % 2 == 0) ? white : black;
         for (int y = 0; y < display->height(); ++y) {
+            const bool marked_line = (int)((i/8) % display->height()) == y;
             for (int x = 0; x < display->width(); ++x) {
-                if (x == mark_column)
+                if (marked_line || x == mark_column)
                     display->SetPixel(x, y, mark_color);
                 else
                     display->SetPixel(x, y, c);
