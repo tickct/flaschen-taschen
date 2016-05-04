@@ -24,6 +24,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include <string>
 
@@ -89,6 +90,37 @@ bool drop_privs(const char *priv_user, const char *priv_group) {
     return true;
 }
 
+static void RunSpeedTest(FlaschenTaschen *display) {
+    const Color white(255, 255, 255);
+    const Color black(0, 0, 0);
+
+    // Have one stable line in the middle to see if there
+    // are glitches.
+    const Color mark_color(255, 0, 0);
+    const int mark_column = display->width() / 2;
+
+    for (unsigned int i = 0;/**/;++i) {
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+
+        const Color &c = (i % 2 == 0) ? white : black;
+        for (int y = 0; y < display->height(); ++y) {
+            for (int x = 0; x < display->width(); ++x) {
+                if (x == mark_column)
+                    display->SetPixel(x, y, mark_color);
+                else
+                    display->SetPixel(x, y, c);
+            }
+        }
+        display->Send();
+
+        gettimeofday(&end, NULL);
+        const int64_t usec = ((uint64_t)end.tv_sec * 1000000 + end.tv_usec)
+            - ((int64_t)start.tv_sec * 1000000 + start.tv_usec);
+        fprintf(stderr, "\b\b\b\b\b\b\b\b%6.1fHz", 1e6 / usec);
+    }
+}
+
 static int usage(const char *progname) {
     fprintf(stderr, "usage: %s [options]\n", progname);
     fprintf(stderr, "Options:\n"
@@ -112,6 +144,7 @@ int main(int argc, char *argv[]) {
     bool as_daemon = false;
     bool run_opc = false;
     bool run_pixel_pusher = false;
+    bool do_testing = false;
 
     enum LongOptionsOnly {
         OPT_OPC_SERVER = 1000,
@@ -128,7 +161,7 @@ int main(int argc, char *argv[]) {
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "I:D:d", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "I:D:dt", long_options, NULL)) != -1) {
         switch (opt) {
         case 'D':
             if (sscanf(optarg, "%dx%d", &width, &height) != 2) {
@@ -147,6 +180,9 @@ int main(int argc, char *argv[]) {
             break;
         case OPT_PIXEL_PUSHER:
             run_pixel_pusher = true;
+            break;
+        case 't':
+            do_testing = true;
             break;
         default:
             return usage(argv[0]);
@@ -172,6 +208,12 @@ int main(int argc, char *argv[]) {
 #elif FT_BACKEND == 2
     TerminalFlaschenTaschen display(STDOUT_FILENO, width, height);
 #endif
+
+    if (do_testing) {
+        fprintf(stderr, "Don't run server, just speed test.\n");
+        RunSpeedTest(&display);
+        return 0;
+    }
 
     // Start all the services and report problems (such as sockets already
     // bound to) before we become a daemon
