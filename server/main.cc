@@ -191,12 +191,6 @@ int main(int argc, char *argv[]) {
     TerminalFlaschenTaschen display(STDOUT_FILENO, width, height);
 #endif
 
-    if (do_testing) {
-        fprintf(stderr, "Don't run server, just speed test.\n");
-        RunSpeedTest(&display);
-        return 0;
-    }
-
     // Start all the services and report problems (such as sockets already
     // bound to) before we become a daemon
     if (!udp_server_init(1337)) {
@@ -221,6 +215,12 @@ int main(int argc, char *argv[]) {
     // require starting threads. These can be various realtime priorities,
     // we so need to stay root until all threads are set up.
     display.PostDaemonInit();
+
+    if (do_testing) {
+        fprintf(stderr, "Don't run server, just speed test.\n");
+        RunSpeedTest(&display);
+        return 0;
+    }
 
     display.Send();  // Clear screen.
 
