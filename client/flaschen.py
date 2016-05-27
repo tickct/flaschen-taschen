@@ -64,3 +64,19 @@ class Flaschen(object):
     '''Send the updated pixels to the display.'''
     data = self._header + self.pixels + "\n" + self._footer
     self.sock.send(data)
+
+  def setSymbol(self,symbol,x,y,cDic):
+    '''Sets pixel in an area to specified colors.
+
+    Args:
+       symbol: a double char array inter arrays are rows
+       x: top left x offset
+       y: top left y offset
+       cDic: dictionary of chars to color tuples'''
+    for i in range(len(symbol)):
+      for j  in range(len(symbol[i])):
+        if(symbol[i][j] in cDic):
+          self.set(x+j,y+i,cDic[symbol[i][j]])
+        else:
+          self.set(x+j,y+i,(0,0,0))
+        
