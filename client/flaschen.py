@@ -59,7 +59,7 @@ class Flaschen(object):
     self.pixels[offset] = color[0]
     self.pixels[offset + 1] = color[1]
     self.pixels[offset + 2] = color[2]
-  
+ 
   def send(self):
     '''Send the updated pixels to the display.'''
     data = self._header + self.pixels + "\n" + self._footer
@@ -72,7 +72,10 @@ class Flaschen(object):
        symbol: a double char array inter arrays are rows
        x: top left x offset
        y: top left y offset
-       cDic: dictionary of chars to color tuples'''
+       cDic: dictionary of chars to color tuples
+
+    Return:
+       none'''
     for i in range(len(symbol)):
       for j  in range(len(symbol[i])):
         if(symbol[i][j] in cDic):
@@ -80,3 +83,31 @@ class Flaschen(object):
         else:
           self.set(x+j,y+i,(0,0,0))
         
+  def getColor(self,x,y):
+    '''returns the r,g,b tuple at given index.
+
+    Args:
+       x: horizontal coordinate
+       y: vertical cordinate
+    
+    Return:
+       3 tuple of ints (Red,Blue,Green)'''
+    if x >= self.width or y >= self.height or x < 0 or y < 0:
+      return
+    r=self.pixels[(x + y * self.width) * 3]
+    g=self.pixels[(x + y * self.width) * 3+1]
+    b=self.pixels[(x + y * self.width) * 3+2]
+    return (r,g,b)
+
+  def setAll(self,color):
+    ''' sets entire screen to given color '''
+    for i in xrange(self.width):
+      for j in xrange(self.height):
+        self.set(i,j,color)
+
+  def clear(self):
+    ''' sets entire screen to black '''
+    for i in xrange(self.width):
+      for j in xrange(self.height):
+        self.set(i,j,(0,0,0))
+ 
